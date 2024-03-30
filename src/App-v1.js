@@ -63,14 +63,24 @@ export default function App() {
       </Navbar>
 
       <Main>
+        {/* Component Composition using children. The preferred way! */}
         <Box>
           <MovieList movies={movies} />
         </Box>
-
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedMoviesList watched={watched} />
         </Box>
+
+        {/* Component Composition passing an Element Prop explicitly instead of children. Not the preferred way! */}
+        {/* <Box element={<MovieList movies={movies} />} />
+        <Box
+          element={
+            <>
+              <WatchedSummary watched={watched} /> <WatchedMoviesList watched={watched} />
+            </>
+          }
+        /> */}
       </Main>
     </>
   );
