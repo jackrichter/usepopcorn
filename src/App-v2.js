@@ -55,6 +55,7 @@ export default function App() {
   // An example of 'Prop Drilling'
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const query = "interstellar";
 
   // OBS! You can't set State in render logic => infinite loop of re-renders!
   // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
@@ -65,10 +66,21 @@ export default function App() {
   //   .then(data => console.log(data.Search));
 
   // The useEffect hook to the rescue. First, we use a Promise technic
+  // useEffect(function () {
+  //   fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
+  //     .then(res => res.json())
+  //     .then(data => setMovies(data.Search));
+  // }, []);
+
+  // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
   useEffect(function () {
-    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-      .then(res => res.json())
-      .then(data => setMovies(data.Search));
+    async function fetchMovies() {
+      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+      const data = await res.json();
+      setMovies(data.Search);
+      console.log(data.Search);
+    }
+    fetchMovies();
   }, []);
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
