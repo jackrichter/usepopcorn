@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // const tempMovieData = [
 //   {
@@ -56,13 +56,20 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
 
-  // OBS! You can't set state in render logic => infinite loop of re-renders!
+  // OBS! You can't set State in render logic => infinite loop of re-renders!
   // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
   //   .then(res => res.json())
   //   .then(data => setMovies(data.Search));
-  fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-    .then(res => res.json())
-    .then(data => console.log(data.Search));
+  // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
+  //   .then(res => res.json())
+  //   .then(data => console.log(data.Search));
+
+  // The useEffect hook to the rescue. First, we use a Promise technic
+  useEffect(function () {
+    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
+      .then(res => res.json())
+      .then(data => setMovies(data.Search));
+  }, []);
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
   return (
