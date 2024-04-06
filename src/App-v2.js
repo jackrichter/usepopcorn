@@ -56,7 +56,9 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const query = "interstellar";
+  const [error, setError] = useState("");
+  // const query = "interstellar";
+  const query = "dfsfvgeaerf";
 
   // OBS! You can't set State in render logic => infinite loop of re-renders!
   // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
@@ -76,11 +78,22 @@ export default function App() {
   // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
   useEffect(function () {
     async function fetchMovies() {
-      setIsLoading(true);
-      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
-      const data = await res.json();
-      setMovies(data.Search);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+
+        if (!res.ok) throw new Error("Something went wrong with fetching movies");
+
+        const data = await res.json();
+
+        if (data.Response === "False") throw new Error("Movie not found");
+
+        setMovies(data.Search);
+        setIsLoading(false);
+      } catch (err) {
+        console.log(err);
+        setError(err.message);
+      }
     }
     fetchMovies();
   }, []);
@@ -95,7 +108,15 @@ export default function App() {
 
       <Main>
         {/* Component Composition using children. The preferred way! */}
-        <Box>{isLoading ? <Loader /> : <MovieList movies={movies} />}</Box>
+        <Box>
+          {error ? (
+            <ErrorMessage message={error} />
+          ) : isLoading ? (
+            <Loader />
+          ) : (
+            <MovieList movies={movies} />
+          )}
+        </Box>
         <Box>
           <WatchedSummary watched={watched} />
           <WatchedMoviesList watched={watched} />
@@ -117,6 +138,14 @@ export default function App() {
 
 function Loader() {
   return <p className="loader">Loading...</p>;
+}
+
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>⛔</span> {message}
+    </p>
+  );
 }
 
 function Navbar({ children }) {
