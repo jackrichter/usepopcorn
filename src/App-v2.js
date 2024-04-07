@@ -53,12 +53,12 @@ const KEY = "4d7a12b1";
 
 export default function App() {
   // An example of 'Prop Drilling'
+  const [query, setQuery] = useState("inception");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  // const query = "interstellar";
-  const query = "dfsfvgeaerf";
+  // const tempQuery = "interstellar";
 
   // OBS! You can't set State in render logic => infinite loop of re-renders!
   // fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
@@ -75,34 +75,63 @@ export default function App() {
   //     .then(data => setMovies(data.Search));
   // }, []);
 
+  // useEffect(function () {
+  //   console.log("After initial render");
+  // }, []);
+
+  // useEffect(function () {
+  //   console.log("After every render");
+  // });
+
+  // useEffect(
+  //   function () {
+  //     console.log("D");
+  //   },
+  //   [query]
+  // );
+
+  // console.log("During render");
+
   // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
+          const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
 
-        if (!res.ok) throw new Error("Something went wrong with fetching movies");
+          if (!res.ok) throw new Error("Something went wrong with fetching movies");
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (data.Response === "False") throw new Error("Movie not found");
+          if (data.Response === "False") throw new Error("Movie not found");
 
-        setMovies(data.Search);
-        setIsLoading(false);
-      } catch (err) {
-        console.log(err);
-        setError(err.message);
+          setMovies(data.Search);
+        } catch (err) {
+          console.log(err);
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
-    fetchMovies();
-  }, []);
+
+      if (query.length < 3) {
+        setMovies([]);
+        setError("");
+        return;
+      }
+
+      fetchMovies();
+    },
+    [query]
+  );
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
   return (
     <>
       <Navbar>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
       </Navbar>
 
@@ -166,9 +195,7 @@ function Logo() {
   );
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
