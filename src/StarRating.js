@@ -18,7 +18,7 @@ StarRating.propTypes = {
   size: PropTypes.number,
   className: PropTypes.string,
   messages: PropTypes.array,
-  textColor: PropTypes.string,
+  // textColor: PropTypes.string,
   defaultRating: PropTypes.number,
   onSetRating: PropTypes.func
 };
@@ -29,24 +29,24 @@ export default function StarRating({
   size = 48,
   className = "",
   messages = [],
-  textColor = "",
+  // textColor = "",
   defaultRating = 0,
   onSetRating
 }) {
   const [rating, setRating] = useState(defaultRating);
   const [tempRating, setTempRating] = useState(0);
 
-  const colorOfText = textColor ? textColor : color;
+  // const colorOfText = textColor ? textColor : color;
   const textStyle = {
     lineHeight: "1",
     margin: "0",
-    color: colorOfText,
+    color,
     fontSize: `${size / 1.5}px`
   };
 
   function handleRating(rating) {
     setRating(rating);
-    // onSetRating(rating);
+    if (onSetRating != null) onSetRating(rating);
   }
 
   return (
