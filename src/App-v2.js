@@ -116,11 +116,15 @@ export default function App() {
   // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           setError("");
-          const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
+          const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {
+            signal: controller.signal
+          });
 
           if (!res.ok) throw new Error("Something went wrong with fetching movies");
 
@@ -129,9 +133,13 @@ export default function App() {
           if (data.Response === "False") throw new Error("Movie not found");
 
           setMovies(data.Search);
+          setError("");
         } catch (err) {
           console.log(err);
-          setError(err.message);
+
+          if (error.name !== "AbortError") {
+            setError(err.message);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -144,6 +152,11 @@ export default function App() {
       }
 
       fetchMovies();
+
+      // Cleanup function
+      return function () {
+        controller.abort();
+      };
     },
     [query]
   );
