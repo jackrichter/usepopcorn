@@ -54,7 +54,7 @@ const KEY = "4d7a12b1";
 
 export default function App() {
   // An example of 'Prop Drilling'
-  const [query, setQuery] = useState("inception");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +135,7 @@ export default function App() {
           setMovies(data.Search);
           setError("");
         } catch (err) {
-          console.log(err);
+          console.log(err.message);
 
           if (error.name !== "AbortError") {
             setError(err.message);
@@ -151,6 +151,7 @@ export default function App() {
         return;
       }
 
+      handleCloseMovie();
       fetchMovies();
 
       // Cleanup function
@@ -158,7 +159,7 @@ export default function App() {
         controller.abort();
       };
     },
-    [query]
+    [query, error.name]
   );
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
@@ -342,6 +343,24 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
+
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Escape") {
+          onCloseMovie();
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+
+      // Cleanup Event Listeners!!!
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [onCloseMovie]
+  );
 
   useEffect(
     function () {
