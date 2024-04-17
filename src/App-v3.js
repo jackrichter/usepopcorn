@@ -56,10 +56,16 @@ export default function App() {
   // An example of 'Prop Drilling'
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+
+  // Read back from local storage using lazy initial state
+  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue);
+  });
 
   // This event handler also handles the closing when the user clicks on the selected movie itself
   function handleSelectMovie(id) {
@@ -73,11 +79,22 @@ export default function App() {
   // Get the current array (watched) and add the additional movie to the end of that array
   function handleAddWatched(movie) {
     setWatched(watched => [...watched, movie]);
+
+    // Save the watched list (array) to browser local storage
+    // localStorage.setItem("watched", JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatched(id) {
     setWatched(movie => watched.filter(movie => movie.imdbID !== id));
   }
+
+  // Save the watched list (array) to browser local storage. BUT now using an Effect!
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
 
   // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
   useEffect(
@@ -289,6 +306,10 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
   /* BREAKING THE HOOKS RULES! */
   // if (imdbRating > 8) [isTop, setIsTop] = useState(true);
   // if (imdbRating > 8) return <p>Greatest Ever!</p>;
+
+  /* Best solution is using derived state */
+  const isTop = imdbRating > 8;
+  console.log(isTop);
 
   function handleAdd() {
     const newWatchedMovie = {
