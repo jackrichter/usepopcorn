@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMovies } from "./useMovies";
 
 const average = arr => arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
@@ -8,10 +9,10 @@ const KEY = "4d7a12b1";
 export default function App() {
   // An example of 'Prop Drilling'
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+
+  // Custom Hook useMovies
+  const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
 
   // Read back from local storage using lazy initial state
   // const [watched, setWatched] = useState([]);
@@ -47,55 +48,6 @@ export default function App() {
       localStorage.setItem("watched", JSON.stringify(watched));
     },
     [watched]
-  );
-
-  // Now, finally, we use async/await which is much nicer and more representing how code really works. Await means, then, pausing and waiting.
-  useEffect(
-    function () {
-      const controller = new AbortController();
-
-      async function fetchMovies() {
-        try {
-          setIsLoading(true);
-          setError("");
-          const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {
-            signal: controller.signal
-          });
-
-          if (!res.ok) throw new Error("Something went wrong with fetching movies");
-
-          const data = await res.json();
-
-          if (data.Response === "False") throw new Error("Movie not found");
-
-          setMovies(data.Search);
-          setError("");
-        } catch (err) {
-          console.log(err.message);
-
-          if (error.name !== "AbortError") {
-            setError(err.message);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-
-      handleCloseMovie();
-      fetchMovies();
-
-      // Cleanup function
-      return function () {
-        controller.abort();
-      };
-    },
-    [query, error.name]
   );
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
@@ -262,6 +214,19 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
 
+  const countRef = useRef(0);
+
+  // The value of a Ref cannot be updated (mutated) in render-logic. Thus, we must use an Effect
+  // This Effect triggers a mutation every time the userRating changes.
+  // We chose a Ref because we just want to store a value without causing re-renders.
+  // Ref values are persisted through re - renders.
+  useEffect(
+    function () {
+      if (userRating) countRef.current++;
+    },
+    [userRating]
+  );
+
   const isWatched = watched.map(movie => movie.imdbID).includes(selectedId);
   const watchedUserRating = watched.find(movie => movie.imdbID === selectedId)?.userRating;
 
@@ -294,7 +259,8 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
       poster,
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ").at(0)),
-      userRating
+      userRating,
+      countRatingDecisions: countRef.current
     };
     onAddWatched(newWatchedMovie);
     onCloseMovie();
