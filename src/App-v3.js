@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useLocalStorageState } from "./useLocalStorageState";
 
 const average = arr => arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
@@ -13,14 +14,8 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  // const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
-
-  // Read back from local storage using lazy initial state
-  // const [watched, setWatched] = useState([]);
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    return JSON.parse(storedValue);
-  });
+  // Using a custom Hook
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
   // This event handler also handles the closing when the user clicks on the selected movie itself
   function handleSelectMovie(id) {
@@ -89,14 +84,6 @@ export default function App() {
       };
     },
     [query, error.name]
-  );
-
-  // Save the watched list (array) to browser local storage. BUT now using an Effect!
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
   );
 
   // Using 'Component Composition' to solve the 'Prop Drilling' problem
